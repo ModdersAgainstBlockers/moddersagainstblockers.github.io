@@ -13,6 +13,10 @@ env:
 jobs:
   process-redirects:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+      issues: write
     steps:
       - id: checkout-repo
         uses: actions/checkout@v3
