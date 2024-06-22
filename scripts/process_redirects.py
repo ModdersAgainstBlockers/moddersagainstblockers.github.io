@@ -59,7 +59,7 @@ def process_redirect_file(repos, file_path, template_content, output_dir):
     ids = []
     count = 0
     for redirect in data['redirects']:
-        if 'url' not in data:  # If there's no URL, this is useless
+        if 'url' not in redirect:  # If there's no URL, this is useless
             logger.warning(f"Redirect is missing URL in: {file_path}")
             continue
 
