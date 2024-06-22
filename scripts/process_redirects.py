@@ -120,9 +120,6 @@ def main():
     data_path = os.path.join(repo_path, 'data')
     output_path = os.path.join(repo_path, 'gh-pages')
 
-    print("CWD: " + os.getcwd())
-    subprocess.run(['tree'], check=False)
-
     # Clean and prepare the gh-pages directory
     if os.path.exists(output_path):
         shutil.rmtree(output_path)
