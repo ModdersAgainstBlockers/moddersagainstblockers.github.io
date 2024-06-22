@@ -1,12 +1,11 @@
-const { request } = require("@octokit/request");
-const fs = require('fs');
-const jwt = require('jsonwebtoken');
-const { readFileSync } = require('fs');
+import { request } from "@octokit/request";
+import { readFileSync } from "fs";
+import jwt from "jsonwebtoken";
 
 // Read environment variables
 const appId = process.env.APP_ID;
 const privateKey = readFileSync('private_key.pem', 'utf-8');
-const workflowIds = JSON.parse(fs.readFileSync('workflow_ids.json', 'utf-8'));
+const workflowIds = JSON.parse(readFileSync('workflow_ids.json', 'utf-8'));
 
 async function generateJWT(appId, privateKey) {
     const payload = {

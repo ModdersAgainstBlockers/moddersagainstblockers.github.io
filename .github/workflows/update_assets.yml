@@ -54,7 +54,7 @@ jobs:
           WORKFLOW_IDS=$(cat workflow_ids.json)
           echo "WORKFLOW_IDS=$WORKFLOW_IDS" >> $GITHUB_ENV
       - name: Trigger Workflows
-        run: node ./scripts/trigger-workflows.js
+        run: node ./scripts/trigger-workflows.mjs
         env:
           APP_ID: ${{ secrets.APP_ID }}
           WORKFLOW_IDS: ${{ env.WORKFLOW_IDS }}
