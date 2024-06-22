@@ -93,10 +93,10 @@ def create_redirect(ids, url_type, url, template_content, output_dir):
         extension = os.path.splitext(file_name)[1]
         # Download image from url, and save a copy within GitHub pages
         r = requests.get(url)
-        with open(os.path.join(output_dir, unique_id + "." + extension), 'wb') as outfile:
+        with open(os.path.join(output_dir, unique_id + extension), 'wb') as outfile:
             outfile.write(r.content)
 
-        redirect_url = f"https://{github_repo}.github.io/{unique_id}.{extension}"
+        redirect_url = f"https://{github_repo}.github.io/{unique_id}{extension}"
     elif url_type == RedirectType.LINK:
         output_path = os.path.join(output_dir, unique_id)
         os.makedirs(output_path, exist_ok=True)
@@ -140,19 +140,19 @@ def main():
         logger.warning(f"No redirects where created!")
         return
 
-    # Commit and push changes to gh-pages branch
+    # Change to gh-pages branch
     subprocess.run(['git', 'checkout', '-B', 'gh-pages'], check=True)
-    #subprocess.run(['git', 'add', '-A'], check=True)
-    #subprocess.run(['git', 'commit', '-m', 'Re-generate redirect files'], check=True)
-    #subprocess.run(['git', 'push', 'origin', 'gh-pages', '--force'], check=True)
-    #logger.info(f"Changes have been pushed!")
 
     with open("workflow_ids.json", "w") as outfile:
         json.dump(repos, outfile)
-    logger.info(repos)  # Temp
+    print(repos)  # TODO: Temp
 
     logger.info(f"Done creating redirects - amount: {count}")
 
 
 if __name__ == "__main__":
+    logging.basicConfig()
+    logging.root.setLevel(logging.NOTSET)
+    logging.basicConfig(level=logging.NOTSET)
+    logger.setLevel(logging.INFO)
     main()
