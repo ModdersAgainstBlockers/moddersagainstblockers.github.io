@@ -143,14 +143,15 @@ def main():
         return
 
     rr = requests.get(f"https://{github_repo}.github.io/last_files.json")
-    last_files = json.loads(rr.text)
-    if 'urls' in last_files:
-        domain = f"https://{github_repo}.github.io"
-        for url in last_files['urls']:
-            # Download last image from url, and save a copy within GitHub pages
-            r = requests.get(url)
-            with open(os.path.join(output_path, url.replace(domain, "")), 'wb') as outfile:
-                outfile.write(r.content)
+    if rr.ok:
+        last_files = json.loads(rr.text)
+        if 'urls' in last_files:
+            domain = f"https://{github_repo}.github.io"
+            for url in last_files['urls']:
+                # Download last image from url, and save a copy within GitHub pages
+                r = requests.get(url)
+                with open(os.path.join(output_path, url.replace(domain, "")), 'wb') as outfile:
+                    outfile.write(r.content)
 
     # Set the list of last files
     with open(os.path.join(output_path, "last_files.json"), "w") as outfile:
