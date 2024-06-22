@@ -3,7 +3,7 @@ import shutil
 import json
 import uuid
 import subprocess
-import urllib.request
+import requests
 import logging
 from enum import Enum
 
@@ -92,7 +92,9 @@ def create_redirect(ids, url_type, url, template_content, output_dir):
         file_name = os.path.basename(url)
         extension = os.path.splitext(file_name)[1]
         # Download image from url, and save a copy within GitHub pages
-        urllib.request.urlretrieve(url, os.path.join(output_dir, unique_id + "." + extension))
+        r = requests.get(url)
+        with open(os.path.join(output_dir, unique_id + "." + extension), 'wb') as outfile:
+            outfile.write(r.content)
 
         redirect_url = f"https://{github_repo}.github.io/{unique_id}.{extension}"
     elif url_type == RedirectType.LINK:
