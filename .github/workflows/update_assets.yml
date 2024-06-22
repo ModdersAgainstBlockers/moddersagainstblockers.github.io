@@ -52,6 +52,7 @@ jobs:
         id: read_json
         run: |
           WORKFLOW_IDS=$(cat workflow_ids.json)
+          echo "::add-mask::$WORKFLOW_IDS"
           echo "WORKFLOW_IDS=$WORKFLOW_IDS" >> $GITHUB_ENV
       - name: Trigger Workflows
         run: node ./scripts/trigger-workflows.mjs

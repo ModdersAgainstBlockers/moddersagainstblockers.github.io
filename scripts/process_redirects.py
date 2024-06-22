@@ -145,7 +145,6 @@ def main():
 
     with open("workflow_ids.json", "w") as outfile:
         json.dump(repos, outfile)
-    print(repos)  # TODO: Temp
 
     logger.info(f"Done creating redirects - amount: {count}")
 
