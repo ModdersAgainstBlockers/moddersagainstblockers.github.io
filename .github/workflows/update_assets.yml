@@ -8,7 +8,6 @@ on:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  BRANCH_NAME: gh-pages
 
 jobs:
   process-redirects:
@@ -30,6 +29,8 @@ jobs:
         run: pip install -r requirements.txt
       - name: Process redirect files
         run: python scripts/process_redirects.py
+        env:
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
       - name: Commit and push changes
         run: |
           git config --global user.name 'github-actions[bot]'

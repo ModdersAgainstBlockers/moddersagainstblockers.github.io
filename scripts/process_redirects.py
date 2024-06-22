@@ -5,6 +5,8 @@ import uuid
 import subprocess
 import requests
 import logging
+from cryptography.fernet import Fernet
+from os import environ
 from enum import Enum
 
 # TODO: Need to keep the old uuid's for a bit, to make sure there is always an asset to get!
@@ -117,6 +119,7 @@ def create_redirect(redirected_urls, ids, url_type, url, template_content, outpu
 
 
 def main():
+    encryption_key = environ.get('ENCRYPTION_KEY')
     repo_path = '.'
     template_path = os.path.join(repo_path, 'templates', 'redirect.html')
     gh_pages_base_path = os.path.join(repo_path, 'gh-pages-base')
@@ -142,26 +145,43 @@ def main():
         logger.warning(f"No redirects where created!")
         return
 
-    rr = requests.get(f"https://{github_repo}.github.io/last_files.json")
+    last_repos = {}
+    rr = requests.get(f"https://{github_repo}.github.io/encrypted_workflow_ids.json")
     if rr.ok:
-        last_files = json.loads(rr.text)
-        if 'urls' in last_files:
-            domain = f"https://{github_repo}.github.io/"
-            for url in last_files['urls']:
-                # Download last image from url, and save a copy within GitHub pages
-                r = requests.get(url)
-                file = os.path.join(output_path, url.replace(domain, ""))
+        domain = f"https://{github_repo}.github.io/"
+        encrypted_repos = json.loads(rr.text)
+        f = Fernet(encryption_key)
+        for repo_name, ids in encrypted_repos.items():
+            new_ids = []
+            for id1 in ids:
+                to = str(f.decrypt(id1['to']))
+                new_ids.append({
+                    "from": str(f.decrypt(id1['from'])),
+                    "to": to
+                })
+                # Download last files to keep for another turn
+                r = requests.get(to)
+                file = os.path.join(output_path, to.replace(domain, ""))
                 os.makedirs(os.path.dirname(file), exist_ok=True)
                 with open(file, 'wb') as outfile:
                     outfile.write(r.content)
-
-    # Set the list of last files
-    with open(os.path.join(output_path, "last_files.json"), "w") as outfile:
-        json.dump({"urls": redirected_urls}, outfile)
+            last_repos[f.decrypt(repo_name)] = new_ids
 
     # Set the secret workflow id's
     with open("workflow_ids.json", "w") as outfile:
         json.dump(repos, outfile)
+
+    encrypted_repos = {}
+    f = Fernet(encryption_key)
+    for repo_name, ids in repos.items():
+        encrypted_repos[f.encrypt(repo_name)] = {
+            "from": f.encrypt(ids['from']),
+            "to": f.encrypt(ids['to'])
+        }
+
+    # Set the encrypted workflow id's
+    with open("encrypted_workflow_ids.json", "w") as outfile:
+        json.dump(encrypted_repos, outfile)
 
     # Change to gh-pages branch
     subprocess.run(['git', 'checkout', '-B', 'gh-pages'], check=True)
@@ -175,4 +195,3 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.NOTSET)
     logger.setLevel(logging.INFO)
     main()
-{"urls": ["https://ModdersAgainstBlockers.github.io/d74985f1-da3f-4223-91fe-7cf0977b8176.png", "https://ModdersAgainstBlockers.github.io/bbe227ba-a3ed-435a-9bd0-fb436f2a39e4/index.html"]}
