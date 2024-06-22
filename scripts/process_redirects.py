@@ -146,7 +146,7 @@ def main():
     if rr.ok:
         last_files = json.loads(rr.text)
         if 'urls' in last_files:
-            domain = f"https://{github_repo}.github.io"
+            domain = f"https://{github_repo}.github.io/"
             for url in last_files['urls']:
                 # Download last image from url, and save a copy within GitHub pages
                 r = requests.get(url)
