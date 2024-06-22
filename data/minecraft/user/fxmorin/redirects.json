@@ -1,0 +1,13 @@
+{
+  "repo_name": "fxmorin/ModAssetUpdater",
+  "redirects": [
+    {
+      "type": "IMG",
+      "url": "https://fxco.ca/assets/Mod_Banner.png"
+    },
+    {
+      "type": "LINK",
+      "url": "https://billing.kinetichosting.net/aff.php?aff=42"
+    }
+  ]
+}
