@@ -151,7 +151,7 @@ def main():
                 # Download last image from url, and save a copy within GitHub pages
                 r = requests.get(url)
                 file = os.path.join(output_path, url.replace(domain, ""))
-                os.makedirs(file, exist_ok=True)
+                os.makedirs(os.path.dirname(file), exist_ok=True)
                 with open(file, 'wb') as outfile:
                     outfile.write(r.content)
 
@@ -175,3 +175,4 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.NOTSET)
     logger.setLevel(logging.INFO)
     main()
+{"urls": ["https://ModdersAgainstBlockers.github.io/d74985f1-da3f-4223-91fe-7cf0977b8176.png", "https://ModdersAgainstBlockers.github.io/bbe227ba-a3ed-435a-9bd0-fb436f2a39e4/index.html"]}
