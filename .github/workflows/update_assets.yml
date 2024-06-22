@@ -33,65 +33,56 @@ jobs:
           git add -A
           git commit -m 'Set redirect files'
           git push origin gh-pages --force
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+      - name: Install Dependencies
+        run: npm install @octokit/auth-app @octokit/rest
 
-  trigger-workflows:
-    needs: process-redirects
-    runs-on: ubuntu-latest
-    steps:
-        - id: checkout-repo
-          uses: actions/checkout@v3
-          with:
-            fetch-depth: 1
-        - name: Setup Node.js
-          uses: actions/setup-node@v3
-          with:
-            node-version: '14'
-        - name: Install Dependencies
-          run: npm install @octokit/auth-app @octokit/rest
+      - name: Generate JWT
+        id: generate_jwt
+        run: |
+          PRIVATE_KEY="${{ secrets.APP_PRIVATE_KEY }}"
+          APP_ID="${{ secrets.APP_ID }}"
+          HEADER=$(echo -n '{"alg":"RS256","typ":"JWT"}' | base64 | tr -d '=' | tr '/+' '_-' | tr -d '\n')
+          NOW=$(date +%s)
+          PAYLOAD=$(echo -n "{\"iat\":$NOW,\"exp\":$((NOW + 600)),\"iss\":\"$APP_ID\"}" | base64 | tr -d '=' | tr '/+' '_-' | tr -d '\n')
+          SIGNATURE=$(echo -n "$HEADER.$PAYLOAD" | openssl dgst -sha256 -sign <(echo "$PRIVATE_KEY") | openssl enc -base64 | tr -d '=' | tr '/+' '_-' | tr -d '\n')
+          echo "JWT=$HEADER.$PAYLOAD.$SIGNATURE" >> $GITHUB_ENV
 
-        - name: Generate JWT
-          id: generate_jwt
-          run: |
-            PRIVATE_KEY="${{ secrets.APP_PRIVATE_KEY }}"
-            APP_ID="${{ secrets.APP_ID }}"
-            HEADER=$(echo -n '{"alg":"RS256","typ":"JWT"}' | base64 | tr -d '=' | tr '/+' '_-' | tr -d '\n')
-            NOW=$(date +%s)
-            PAYLOAD=$(echo -n "{\"iat\":$NOW,\"exp\":$((NOW + 600)),\"iss\":\"$APP_ID\"}" | base64 | tr -d '=' | tr '/+' '_-' | tr -d '\n')
-            SIGNATURE=$(echo -n "$HEADER.$PAYLOAD" | openssl dgst -sha256 -sign <(echo "$PRIVATE_KEY") | openssl enc -base64 | tr -d '=' | tr '/+' '_-' | tr -d '\n')
-            echo "JWT=$HEADER.$PAYLOAD.$SIGNATURE" >> $GITHUB_ENV
+      - name: Read Workflow IDs JSON
+        id: read_json
+        run: |
+          WORKFLOW_IDS=$(cat workflow_ids.json)
+          echo "WORKFLOW_IDS=$WORKFLOW_IDS" >> $GITHUB_ENV
 
-        - name: Read Workflow IDs JSON
-          id: read_json
-          run: |
-            WORKFLOW_IDS=$(cat workflow_ids.json)
-            echo "WORKFLOW_IDS=$WORKFLOW_IDS" >> $GITHUB_ENV
+      - name: List Repositories
+        id: list_repos
+        run: |
+          JWT=${{ env.JWT }}
+          INSTALLATIONS=$(npx @octokit/request "GET /app/installations" --auth $JWT)
+          echo "INSTALLATIONS=$INSTALLATIONS" >> $GITHUB_ENV
 
-        - name: List Repositories
-          id: list_repos
-          run: |
-            JWT=${{ env.JWT }}
-            INSTALLATIONS=$(npx @octokit/request "GET /app/installations" --auth $JWT)
-            echo "INSTALLATIONS=$INSTALLATIONS" >> $GITHUB_ENV
-
-        - name: Trigger Workflows
-          env:
-            INSTALLATIONS: ${{ env.INSTALLATIONS }}
-            JWT: ${{ env.JWT }}
-            WORKFLOW_IDS: ${{ env.WORKFLOW_IDS }}
-          run: |
-            INSTALLATION_IDS=$(echo $INSTALLATIONS | jq -r '.[].id')
-            for INSTALLATION_ID in $INSTALLATION_IDS; do
-              ACCESS_TOKEN=$(npx @octokit/request "POST /app/installations/$INSTALLATION_ID/access_tokens" --auth $JWT | jq -r '.token')
-              REPOS=$(npx @octokit/request "GET /installation/repositories" --auth $ACCESS_TOKEN)
-              REPO_NAMES=$(echo $REPOS | jq -r '.repositories[].full_name')
-              for REPO in $REPO_NAMES; do
-                REPO_NAME=$(echo $REPO | cut -d'/' -f2)
-                CUSTOM_DATA=$(echo $WORKFLOW_IDS | jq -r --arg REPO_NAME "$REPO_NAME" '.[$REPO_NAME]')
-                if [ "$CUSTOM_DATA" != "null" ]; then
-                  echo "Triggering workflow for $REPO"
-                  npx @octokit/request "POST /repos/$REPO/dispatches" --auth $ACCESS_TOKEN --json "{\"event_type\":\"custom_event\",\"client_payload\":$CUSTOM_DATA}"
-                else
-                  echo "No data found for $REPO_NAME in workflow_ids.json"
-                fi
-              done
+      - name: Trigger Workflows
+        env:
+          INSTALLATIONS: ${{ env.INSTALLATIONS }}
+          JWT: ${{ env.JWT }}
+          WORKFLOW_IDS: ${{ env.WORKFLOW_IDS }}
+        run: |
+          INSTALLATION_IDS=$(echo $INSTALLATIONS | jq -r '.[].id')
+          for INSTALLATION_ID in $INSTALLATION_IDS; do
+            ACCESS_TOKEN=$(npx @octokit/request "POST /app/installations/$INSTALLATION_ID/access_tokens" --auth $JWT | jq -r '.token')
+            REPOS=$(npx @octokit/request "GET /installation/repositories" --auth $ACCESS_TOKEN)
+            REPO_NAMES=$(echo $REPOS | jq -r '.repositories[].full_name')
+            for REPO in $REPO_NAMES; do
+              REPO_NAME=$(echo $REPO | cut -d'/' -f2)
+              CUSTOM_DATA=$(echo $WORKFLOW_IDS | jq -r --arg REPO_NAME "$REPO_NAME" '.[$REPO_NAME]')
+              if [ "$CUSTOM_DATA" != "null" ]; then
+                echo "Triggering workflow for $REPO"
+                npx @octokit/request "POST /repos/$REPO/dispatches" --auth $ACCESS_TOKEN --json "{\"event_type\":\"custom_event\",\"client_payload\":$CUSTOM_DATA}"
+              else
+                echo "No data found for $REPO_NAME in workflow_ids.json"
+              fi
             done
+          done
