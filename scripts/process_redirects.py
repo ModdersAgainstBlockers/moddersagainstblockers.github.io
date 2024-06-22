@@ -150,7 +150,9 @@ def main():
             for url in last_files['urls']:
                 # Download last image from url, and save a copy within GitHub pages
                 r = requests.get(url)
-                with open(os.path.join(output_path, url.replace(domain, "")), 'wb') as outfile:
+                file = os.path.join(output_path, url.replace(domain, ""))
+                os.makedirs(file, exist_ok=True)
+                with open(file, 'wb') as outfile:
                     outfile.write(r.content)
 
     # Set the list of last files
