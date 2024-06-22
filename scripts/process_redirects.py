@@ -114,7 +114,7 @@ def create_redirect(ids, url_type, url, template_content, output_dir):
 
 
 def main():
-    repo_path = '..'
+    repo_path = '.'
     template_path = os.path.join(repo_path, 'templates', 'redirect.html')
     gh_pages_base_path = os.path.join(repo_path, 'gh-pages-base')
     data_path = os.path.join(repo_path, 'data')
