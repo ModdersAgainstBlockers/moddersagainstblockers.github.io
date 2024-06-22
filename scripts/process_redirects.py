@@ -114,9 +114,6 @@ def create_redirect(ids, url_type, url, template_content, output_dir):
 
 
 def main():
-    # Reset git history
-    subprocess.run(['git', 'reset', '--hard', 'gh-pages'], check=True)
-
     repo_path = '..'
     template_path = os.path.join(repo_path, 'templates', 'redirect.html')
     gh_pages_base_path = os.path.join(repo_path, 'gh-pages-base')
