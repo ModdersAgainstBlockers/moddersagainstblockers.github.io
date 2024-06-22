@@ -142,13 +142,14 @@ def main():
 
     # Commit and push changes to gh-pages branch
     subprocess.run(['git', 'checkout', '-B', 'gh-pages'], check=True)
-    subprocess.run(['git', 'add', '-A'], check=True)
-    subprocess.run(['git', 'commit', '-m', 'Re-generate redirect files'], check=True)
-    subprocess.run(['git', 'push', 'origin', 'gh-pages', '--force'], check=True)
-    logger.info(f"Changes have been pushed!")
+    #subprocess.run(['git', 'add', '-A'], check=True)
+    #subprocess.run(['git', 'commit', '-m', 'Re-generate redirect files'], check=True)
+    #subprocess.run(['git', 'push', 'origin', 'gh-pages', '--force'], check=True)
+    #logger.info(f"Changes have been pushed!")
 
     with open("workflow_ids.json", "w") as outfile:
         json.dump(repos, outfile)
+    logger.info(repos)  # Temp
 
     logger.info(f"Done creating redirects - amount: {count}")
 
