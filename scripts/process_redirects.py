@@ -34,7 +34,7 @@ def find_redirect_files(data_path):
     return redirect_files
 
 
-def process_redirect_file(repos, file_path, template_content, output_dir):
+def process_redirect_file(repos, redirected_urls, file_path, template_content, output_dir):
     with open(file_path, 'r') as f:
         data = json.load(f)
 
@@ -78,14 +78,14 @@ def process_redirect_file(repos, file_path, template_content, output_dir):
         if not url_type:
             continue
 
-        if create_redirect(ids, url_type, url, template_content, output_dir):
+        if create_redirect(redirected_urls, ids, url_type, url, template_content, output_dir):
             count += 1
     if count > 0:
         repos[repo_name] = ids
     return count
 
 
-def create_redirect(ids, url_type, url, template_content, output_dir):
+def create_redirect(redirected_urls, ids, url_type, url, template_content, output_dir):
     unique_id = str(uuid.uuid4())  # Generate the unique uuid for the redirect
 
     if url_type == RedirectType.IMG:
@@ -110,6 +110,7 @@ def create_redirect(ids, url_type, url, template_content, output_dir):
     else:
         return False
 
+    redirected_urls.append(redirect_url)
     ids.append({"from": url, "to": redirect_url})
     logger.info(f"Processed `{url_type}` redirect at `{redirect_url}` to `{url}`")
     return True
@@ -132,19 +133,35 @@ def main():
 
     repos = {}
     count = 0
+    redirected_urls = []
     redirect_files = find_redirect_files(data_path)
     for redirect_file in redirect_files:
-        count += process_redirect_file(repos, redirect_file, template_content, output_path)
+        count += process_redirect_file(repos, redirected_urls, redirect_file, template_content, output_path)
 
     if count == 0:
         logger.warning(f"No redirects where created!")
         return
 
-    # Change to gh-pages branch
-    subprocess.run(['git', 'checkout', '-B', 'gh-pages'], check=True)
+    rr = requests.get(f"https://{github_repo}.github.io/last_files.json")
+    last_files = json.loads(rr.text)
+    if 'urls' in last_files:
+        domain = f"https://{github_repo}.github.io"
+        for url in last_files['urls']:
+            # Download last image from url, and save a copy within GitHub pages
+            r = requests.get(url)
+            with open(os.path.join(output_path, url.replace(domain, "")), 'wb') as outfile:
+                outfile.write(r.content)
 
+    # Set the list of last files
+    with open(os.path.join(output_path, "last_files.json"), "w") as outfile:
+        json.dump({"urls": redirected_urls}, outfile)
+
+    # Set the secret workflow id's
     with open("workflow_ids.json", "w") as outfile:
         json.dump(repos, outfile)
+
+    # Change to gh-pages branch
+    subprocess.run(['git', 'checkout', '-B', 'gh-pages'], check=True)
 
     logger.info(f"Done creating redirects - amount: {count}")
 
