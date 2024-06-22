@@ -174,10 +174,13 @@ def main():
     encrypted_repos = {}
     f = Fernet(encryption_key)
     for repo_name, ids in repos.items():
-        encrypted_repos[f.encrypt(repo_name)] = {
-            "from": f.encrypt(ids['from']),
-            "to": f.encrypt(ids['to'])
-        }
+        new_ids = []
+        for id1 in ids:
+            new_ids.append({
+                "from": f.encrypt(id1['from']),
+                "to": f.encrypt(id1['to'])
+            })
+        encrypted_repos[f.encrypt(repo_name)] = new_ids
 
     # Set the encrypted workflow id's
     with open("encrypted_workflow_ids.json", "w") as outfile:
