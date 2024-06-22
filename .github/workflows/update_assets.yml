@@ -24,11 +24,6 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Hard reset the gh-pages branch
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git reset --hard gh-pages
       - name: Process redirect files
         run: python scripts/process_redirects.py
       - name: Commit and push changes
