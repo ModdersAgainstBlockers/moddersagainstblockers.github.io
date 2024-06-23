@@ -6,16 +6,27 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  packages: write
+  contents: write
+  issues: write
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "updaters"
+  cancel-in-progress: false
+
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   process-redirects:
+    name: Creating new redirects
+    if: always()
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: write
-      issues: write
     steps:
       - id: checkout-repo
         uses: actions/checkout@v3
@@ -38,6 +49,47 @@ jobs:
           git add -A
           git commit -m 'Set redirect files'
           git push origin gh-pages --force
+      - uses: actions/cache@v3
+        with:
+          path: workflow_ids.json
+          key: workflow_ids
+  update-pages:
+    name: Updating github pages
+    needs:
+      - process-redirects
+    if: |
+      always() &&
+      needs.process-redirects.result == 'success'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload entire repository
+          path: '.'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+  trigger-workflows:
+    name: Triggering individual workflows
+    needs:
+      - update-pages
+    if: |
+      always() &&
+      needs.update-pages.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/cache@v3
+        with:
+          path: workflow_ids.json
+          key: workflow_ids
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
