@@ -36,7 +36,7 @@ def find_redirect_files(data_path):
     return redirect_files
 
 
-def process_redirect_file(repos, redirected_urls, file_path, template_content, output_dir):
+def process_redirect_file(repos, last_repos, file_path, template_content, output_dir):
     with open(file_path, 'r') as f:
         data = json.load(f)
 
@@ -57,6 +57,10 @@ def process_redirect_file(repos, redirected_urls, file_path, template_content, o
     if len(redirects) == 0:
         logger.warning(f"No redirects in: {file_path}")
         return
+
+    last_ids = []
+    if repo_name in last_repos:
+        last_ids = last_repos[repo_name]
 
     ids = []
     count = 0
@@ -80,14 +84,14 @@ def process_redirect_file(repos, redirected_urls, file_path, template_content, o
         if not url_type:
             continue
 
-        if create_redirect(redirected_urls, ids, url_type, url, template_content, output_dir):
+        if create_redirect(last_ids, ids, url_type, url, template_content, output_dir):
             count += 1
     if count > 0:
         repos[repo_name] = ids
     return count
 
 
-def create_redirect(redirected_urls, ids, url_type, url, template_content, output_dir):
+def create_redirect(last_ids, ids, url_type, url, template_content, output_dir):
     unique_id = str(uuid.uuid4())  # Generate the unique uuid for the redirect
 
     if url_type == RedirectType.IMG:
@@ -112,8 +116,15 @@ def create_redirect(redirected_urls, ids, url_type, url, template_content, outpu
     else:
         return False
 
-    redirected_urls.append(redirect_url)
-    ids.append({"from": url, "to": redirect_url})
+    last_to = ''
+    for id1 in last_ids:
+        if id1['from'] == url:
+            last_to = id1['to']
+            break
+    if last_to:
+        ids.append({"from": url, "last_to": last_to, "to": redirect_url})
+    else:
+        ids.append({"from": url, "to": redirect_url})
     logger.info(f"Processed `{url_type}` redirect at `{redirect_url}` to `{url}`")
     return True
 
@@ -136,14 +147,7 @@ def main():
 
     repos = {}
     count = 0
-    redirected_urls = []
     redirect_files = find_redirect_files(data_path)
-    for redirect_file in redirect_files:
-        count += process_redirect_file(repos, redirected_urls, redirect_file, template_content, output_path)
-
-    if count == 0:
-        logger.warning(f"No redirects where created!")
-        return
 
     last_repos = {}
     rr = requests.get(f"https://{github_repo}.github.io/encrypted_workflow_ids.json")
@@ -166,6 +170,13 @@ def main():
                 with open(file, 'wb') as outfile:
                     outfile.write(r.content)
             last_repos[f.decrypt(repo_name).decode()] = new_ids
+
+    for redirect_file in redirect_files:
+        count += process_redirect_file(repos, last_repos, redirect_file, template_content, output_path)
+
+    if count == 0:
+        logger.warning(f"No redirects where created!")
+        return
 
     # Set the secret workflow id's
     with open("workflow_ids.json", "w") as outfile:
