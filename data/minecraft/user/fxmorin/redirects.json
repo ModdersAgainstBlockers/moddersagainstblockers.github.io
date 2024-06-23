@@ -1,13 +1,14 @@
 {
-  "repo_name": "fxmorin/ModAssetUpdater",
+  "repo_name": "fxmorin/ModAssetsUpdater",
   "redirects": [
     {
-      "type": "IMG",
       "url": "https://fxco.ca/assets/Mod_Banner.png"
     },
     {
-      "type": "LINK",
       "url": "https://billing.kinetichosting.net/aff.php?aff=42"
+    },
+    {
+      "url": "https://fxco.ca/assets/memoryleakfix.webp"
     }
   ]
 }
