@@ -72,8 +72,9 @@ async function main() {
             const repoName = repo.full_name.toLowerCase();
             const customData = workflowIds[repoName];
             if (customData) {
+                const customDataObj = {"data": customData}
                 console.log(`Triggering workflow for ${repo.full_name}`);
-                await triggerWorkflow(repo.full_name, accessToken, customData);
+                await triggerWorkflow(repo.full_name, accessToken, customDataObj);
             } else {
                 console.log(`No data found for ${repoName} in workflow_ids.json`);
             }
