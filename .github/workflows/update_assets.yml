@@ -86,6 +86,8 @@ jobs:
       needs.update-pages.result == 'success'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - uses: actions/cache@v3
         with:
           path: workflow_ids.json
