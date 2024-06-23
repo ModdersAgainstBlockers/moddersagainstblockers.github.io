@@ -102,12 +102,12 @@ def create_redirect(last_ids, ids, url_type, url, template_content, output_dir):
         with open(os.path.join(output_dir, unique_id + extension), 'wb') as outfile:
             outfile.write(r.content)
 
-        redirect_url = f"https://{github_repo}.github.io/{unique_id}{extension}"
+        to_url = f"{unique_id}{extension}"
     elif url_type == RedirectType.LINK:
         output_path = os.path.join(output_dir, unique_id)
         os.makedirs(output_path, exist_ok=True)
 
-        redirect_url = f"https://{github_repo}.github.io/{unique_id}/index.html"
+        to_url = f"{unique_id}/index.html"
 
         new_content = template_content.replace('||redirect_url||', url)
 
@@ -122,10 +122,9 @@ def create_redirect(last_ids, ids, url_type, url, template_content, output_dir):
             last_to = id1['to']
             break
     if last_to:
-        ids.append({"from": url, "last_to": last_to, "to": redirect_url})
+        ids.append({"from": url, "last_to": last_to, "to": to_url})
     else:
-        ids.append({"from": url, "to": redirect_url})
-    logger.info(f"Processed `{url_type}` redirect at `{redirect_url}` to `{url}`")
+        ids.append({"from": url, "to": to_url})
     return True
 
 
