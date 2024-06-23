@@ -71,7 +71,7 @@ def process_redirect_file(repos, last_repos, file_path, template_content, output
 
         url = redirect['url']
 
-        if 'type' not in redirect:  # Was type set manually, use this instead of detecting it.
+        if 'type' in redirect:  # Was type set manually, use this instead of detecting it.
             type_name = redirect['type']
             if type_name in RedirectType:
                 url_type = RedirectType[type_name]
