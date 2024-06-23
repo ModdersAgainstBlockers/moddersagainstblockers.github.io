@@ -177,10 +177,10 @@ def main():
         new_ids = []
         for id1 in ids:
             new_ids.append({
-                "from": f.encrypt(id1['from'].encode(encoding='utf-8')),
-                "to": f.encrypt(id1['to'].encode(encoding='utf-8'))
+                "from": f.encrypt(id1['from'].encode(encoding='utf-8')).decode(),
+                "to": f.encrypt(id1['to'].encode(encoding='utf-8')).decode()
             })
-        encrypted_repos[f.encrypt(repo_name.encode(encoding='utf-8'))] = new_ids
+        encrypted_repos[f.encrypt(repo_name.encode(encoding='utf-8')).decode()] = new_ids
 
     # Set the encrypted workflow id's
     with open("encrypted_workflow_ids.json", "w") as outfile:
