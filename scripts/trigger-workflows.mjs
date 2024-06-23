@@ -69,7 +69,7 @@ async function main() {
         const repositories = await getRepositories(accessToken);
 
         for (const repo of repositories) {
-            const repoName = repo.full_name.split('/')[1];
+            const repoName = repo.full_name;
             const customData = workflowIds[repoName];
             if (customData) {
                 console.log(`Triggering workflow for ${repo.full_name}`);
