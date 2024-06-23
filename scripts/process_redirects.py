@@ -163,8 +163,8 @@ def main():
                     "to": to
                 })
                 # Download last files to keep for another turn
-                r = requests.get(to)
-                file = os.path.join(output_path, to.replace(domain, ""))
+                r = requests.get(domain + to)
+                file = os.path.join(output_path, to)
                 os.makedirs(os.path.dirname(file), exist_ok=True)
                 with open(file, 'wb') as outfile:
                     outfile.write(r.content)
