@@ -183,7 +183,7 @@ def main():
         encrypted_repos[f.encrypt(repo_name.encode(encoding='utf-8')).decode()] = new_ids
 
     # Set the encrypted workflow id's
-    with open("encrypted_workflow_ids.json", "w") as outfile:
+    with open(os.path.join(output_path, "encrypted_workflow_ids.json"), "w") as outfile:
         json.dump(encrypted_repos, outfile)
 
     # Change to gh-pages branch
