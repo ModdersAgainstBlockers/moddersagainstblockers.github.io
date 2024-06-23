@@ -154,9 +154,9 @@ def main():
         for repo_name, ids in encrypted_repos.items():
             new_ids = []
             for id1 in ids:
-                to = str(f.decrypt(id1['to']))
+                to = f.decrypt(id1['to']).decode()
                 new_ids.append({
-                    "from": str(f.decrypt(id1['from'])),
+                    "from": f.decrypt(id1['from']).decode(),
                     "to": to
                 })
                 # Download last files to keep for another turn
@@ -177,8 +177,8 @@ def main():
         new_ids = []
         for id1 in ids:
             new_ids.append({
-                "from": f.encrypt(id1['from']),
-                "to": f.encrypt(id1['to'])
+                "from": f.encrypt(id1['from'].encode(encoding='utf-8')),
+                "to": f.encrypt(id1['to'].encode(encoding='utf-8'))
             })
         encrypted_repos[f.encrypt(repo_name)] = new_ids
 
