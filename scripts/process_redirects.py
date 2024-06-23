@@ -48,6 +48,7 @@ def process_redirect_file(repos, last_repos, file_path, template_content, output
     if not repo_name:
         logger.warning(f"Invalid repo name in: {file_path} - {repo_name}")
         return 0
+    repo_name = repo_name.lower()
 
     if 'redirects' not in data:  # Must be redirects for it to be valid
         logger.warning(f"Missing redirects in: {file_path}")
