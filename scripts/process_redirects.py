@@ -150,7 +150,8 @@ def main():
     redirect_files = find_redirect_files(data_path)
 
     last_repos = {}
-    rr = requests.get(f"https://{github_repo}.github.io/encrypted_workflow_ids.json")
+    encrypted_workflow_url = f"https://{github_repo}.github.io/encrypted_workflow_ids.json"
+    rr = requests.get(encrypted_workflow_url)
     if rr.ok:
         domain = f"https://{github_repo}.github.io/"
         encrypted_repos = json.loads(rr.text)
@@ -170,6 +171,9 @@ def main():
                 with open(file, 'wb') as outfile:
                     outfile.write(r.content)
             last_repos[f.decrypt(repo_name).decode()] = new_ids
+    else:
+        logger.warning("`encrypted_workflow_ids.json` was not found! Is this a new repository? - " +
+                       encrypted_workflow_url)
 
     for redirect_file in redirect_files:
         count += process_redirect_file(repos, last_repos, redirect_file, template_content, output_path)
