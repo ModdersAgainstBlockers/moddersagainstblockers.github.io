@@ -165,7 +165,7 @@ def main():
                 os.makedirs(os.path.dirname(file), exist_ok=True)
                 with open(file, 'wb') as outfile:
                     outfile.write(r.content)
-            last_repos[f.decrypt(repo_name)] = new_ids
+            last_repos[f.decrypt(repo_name).decode()] = new_ids
 
     # Set the secret workflow id's
     with open("workflow_ids.json", "w") as outfile:
@@ -180,7 +180,7 @@ def main():
                 "from": f.encrypt(id1['from'].encode(encoding='utf-8')),
                 "to": f.encrypt(id1['to'].encode(encoding='utf-8'))
             })
-        encrypted_repos[f.encrypt(repo_name)] = new_ids
+        encrypted_repos[f.encrypt(repo_name.encode(encoding='utf-8'))] = new_ids
 
     # Set the encrypted workflow id's
     with open("encrypted_workflow_ids.json", "w") as outfile:
